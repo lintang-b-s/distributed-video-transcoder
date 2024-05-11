@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+    <title>Dash.js Rocks</title>
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <video id="videoPlayer" controls></video>
+</div>
+<script src="./dash.all.min.js"></script>
+<script>
+    (function () {
+        // var url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+        var url = "http://127.0.0.1:9000/oti-be-bucket/dash/output/stream.mpd?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=kIiDoM7RUmofIPTyQlQQ%2F20240511%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240511T095820Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22stream.mpd%22&X-Amz-Signature=1fbce8e3e32c581f4c56612143a3cdf49ca5c859d255f74338c8edfd463889fb";
+        // var url = "http://127.0.0.1:9000/oti-be-bucket/video/output/stream.mpd?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=kIiDoM7RUmofIPTyQlQQ%2F20240511%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240511T151040Z&X-Amz-Expires=86400&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22stream.mpd%22&X-Amz-Signature=529675849ac595d19b3d795fdc0a71bfe31cb0ae87157b266114912ace527f21"
+        var player = dashjs.MediaPlayer().create();
+        player.initialize(document.querySelector("#videoPlayer"), url, true);
+    })();
+</script>
+</body>
+</html>
