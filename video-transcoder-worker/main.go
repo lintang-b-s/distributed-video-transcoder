@@ -5,10 +5,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"lintang/video-processing-worker/biz/router"
 	"lintang/video-processing-worker/config"
 	"os"
 	"regexp"
 	"time"
+
+	"lintang/video-processing-worker/di"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -32,7 +35,6 @@ func main() {
 	hlog.SetLogger(logsCores)
 
 	// init data access layer
-	// pg := dal.InitPg(cfg) // init postgres & rabbitmq
 
 	// validation error custom
 	customValidationErr := CreateCustomValidationError()
@@ -50,16 +52,20 @@ func main() {
 	callback = append(callback)
 	h.Engine.OnShutdown = append(h.Engine.OnShutdown, callback...) /// graceful shutdown
 
+	tSvc := di.InitTranscoderService(cfg)
+	router.TranscoderRouter(h, tSvc)
+
 	// dari minio
-	videoFile, err := getUserVideoURL("joker_cloud")
-	if err != nil {
-		zap.L().Error("createHLSFromMinioObject", zap.Error(err))
-	}
-	err = createHLSFromMinioObject(videoFile, "joker_cloud") // buat hls dari video yang dari minio object
-	if err != nil {
-		zap.L().Error("createHLSFromMinioObject", zap.Error(err))
-	}
-	hlsPlaylistUploader(fmt.Sprintf("/%s/output", "joker_cloud"), fmt.Sprintf("./%s/output", "joker_cloud"))
+	// coba coba ffmpeg heheh
+	// videoFile, err := getUserVideoURL("joker_cloud")
+	// if err != nil {
+	// 	zap.L().Error("createHLSFromMinioObject", zap.Error(err))
+	// }
+	// err = createHLSFromMinioObject(videoFile, "joker_cloud") // buat hls dari video yang dari minio object
+	// if err != nil {
+	// 	zap.L().Error("createHLSFromMinioObject", zap.Error(err))
+	// }
+	// hlsPlaylistUploader(fmt.Sprintf("/%s/output", "joker_cloud"), fmt.Sprintf("./%s/output", "joker_cloud"))
 
 	// err = createHLSFromLocal("./video/joker.mp4", "./video") //buat hls dari video di locak
 	// fmt.Println(err)

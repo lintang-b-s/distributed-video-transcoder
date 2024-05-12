@@ -19,7 +19,7 @@ type DkronAPI struct {
 	MyServiceURL string
 }
 
-func CreateDkronAPI(cfg *config.Config) *DkronAPI {
+func NewDkronAPI(cfg *config.Config) *DkronAPI {
 	return &DkronAPI{
 		BaseURL:      cfg.Dkron.DkronURL,
 		MyServiceURL: cfg.MyServiceURL,
@@ -42,7 +42,7 @@ type JobReq struct {
 func (d *DkronAPI) AddJobUploadPlaylistToMinio(ctx context.Context, filename string) error {
 	randomString := uuid.New().String()
 
-	cronURL := "http://%s/api/v1/transcoder/upload_playlist"
+	cronURL := "http://%s/api/v1/transcoder/upload_playlist?filename" + filename
 	jobName := filename + randomString
 
 	at := time.Now().Add(time.Duration(500) * time.Millisecond)
@@ -58,11 +58,8 @@ func (d *DkronAPI) AddJobUploadPlaylistToMinio(ctx context.Context, filename str
 		Executor:    "shell",
 		ExecutorConfig: map[string]string{
 			// "shell": "true",
-			"command": `curl --location ` + cronURL + ` \
-			--header 'Content-Type: application/json' \
-			--data '{
-				"filename": "` + filename + `"
-			}'`,
+			"command": `curl -X POST --location ` + cronURL + ` \
+			--header 'Content-Type: application/json' `,
 		},
 	})
 

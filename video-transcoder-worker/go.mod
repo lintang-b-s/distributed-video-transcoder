@@ -4,6 +4,8 @@ go 1.22.2
 
 require (
 	github.com/cloudwego/hertz v0.9.0
+	github.com/google/uuid v1.6.0
+	github.com/google/wire v0.6.0
 	github.com/hertz-contrib/logger/zap v1.1.0
 	github.com/hertz-contrib/pprof v0.1.2
 	github.com/ilyakaznacheev/cleanenv v1.5.0
@@ -29,7 +31,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/pprof v0.0.0-20220608213341-c488b8fa1db3 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/henrylee2cn/ameda v1.4.10 // indirect
 	github.com/henrylee2cn/goutil v0.0.0-20210127050712-89660552f6f8 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
