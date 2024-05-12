@@ -23,15 +23,24 @@ type MinioAPI interface {
 	GetAllBitrateVideoVersion(objectFolderName string) ([]*minio.Object, error)
 	BitrateVersionVideoUploader(objectFolderName string, fileName string, filePath string) error
 	HlsPlaylistUploader(objectFolderName string, folderSource string) error
-}
-type TranscoderService struct {
-	dkronAPI DkronCLIAPI
-	minioAPI MinioAPI
+	UploadThumbnail(objectFolderName string, fileName string, filePath string) error
+	GetThumbnail(filename string) (string, error)
+	GetTranscodedVideoURL(filename string) (string, error)
 }
 
-func NewTranscoderService(d DkronCLIAPI, m MinioAPI) *TranscoderService {
+type MetadataMQ interface {
+	PublishNewMetadata(ctx context.Context, d domain.VideoMetadataMessage) error
+}
+
+type TranscoderService struct {
+	dkronAPI   DkronCLIAPI
+	minioAPI   MinioAPI
+	metadataMQ MetadataMQ
+}
+
+func NewTranscoderService(d DkronCLIAPI, m MinioAPI, mtMQ MetadataMQ) *TranscoderService {
 	return &TranscoderService{
-		d, m,
+		d, m, mtMQ,
 	}
 }
 
@@ -58,7 +67,7 @@ func (s *TranscoderService) Transcode(ctx context.Context, filename string, reso
 		// kalau video belum sepenuhnya ada di minio
 		for {
 			// fetch video dari minio terus menerus (setiap 300 milisecond) sampai object ada di minio
-			fileInfo, err := s.minioAPI.GetUserVideoMP4URL(filename)
+			fileInfo, _ := s.minioAPI.GetUserVideoMP4URL(filename)
 			if stat, err = fileInfo.Stat(); err == nil {
 				break
 			}
@@ -77,26 +86,51 @@ func (s *TranscoderService) Transcode(ctx context.Context, filename string, reso
 	switch resolution {
 	case router.Res240p:
 		err = util.CreateBitrate240pVideo(filePath, filename)
-		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "240-f.mp4", fmt.Sprintf("%s/240-f.mp4", filename))
+		if err != nil {
+			zap.L().Error("util.CreateBitrate240pVideo (Transcode)", zap.Error(err))
+		}
+		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "240-f.mp4", fmt.Sprintf("./%s/240-f.mp4", filename))
 		break
 	case router.Res360p:
 		err = util.CreateBitrate360pVideo(filePath, filename)
-		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "360-f.mp4", fmt.Sprintf("%s/360-f.mp4", filename))
+		if err != nil {
+			zap.L().Error("util.CreateBitrateRes360pVideo (Transcode)", zap.Error(err))
+		}
+		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "360-f.mp4", fmt.Sprintf("./%s/360-f.mp4", filename))
 	case router.Res480p:
 		err = util.CreateBitrate480pVideo(filePath, filename)
-		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "480-f.mp4", fmt.Sprintf("%s/480-f.mp4", filename))
+		if err != nil {
+			zap.L().Error("util.CreateBitrate480ppVideo (Transcode)", zap.Error(err))
+		}
+		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "480-f.mp4", fmt.Sprintf("./%s/480-f.mp4", filename))
 	case router.Res720p:
 		err = util.CreateBitrate720pVideo(filePath, filename)
-		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "720-f.mp4", fmt.Sprintf("%s/720-f.mp4", filename))
+		if err != nil {
+			zap.L().Error("util.CreateBitrate720pVideo (Transcode)", zap.Error(err))
+		}
+		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "720-f.mp4", fmt.Sprintf("./%s/720-f.mp4", filename))
 	case router.Res1080p:
 		err = util.CreateBitrate1080pVideo(filePath, filename)
-		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "1080-f.mp4", fmt.Sprintf("%s/1080-f.mp4", filename))
+		if err != nil {
+			zap.L().Error("util.CreateBitrate1080pVideo (Transcode)", zap.Error(err))
+		}
+		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "1080-f.mp4", fmt.Sprintf("./%s/1080-f.mp4", filename))
 
 	}
 	if err != nil {
 		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 	}
 
+	// bikin thumbnailURl
+	err = util.CreateVideoThumbnaill(filePath, filename)
+	if err != nil {
+		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+	}
+	// upload thumbnail ke minio
+	err = s.minioAPI.UploadThumbnail(fmt.Sprintf("/%s/", filename), "thumbnail.png", fmt.Sprintf("./%s/thumbnail.png", filename))
+	if err != nil {
+		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+	}
 	return nil
 }
 
@@ -129,7 +163,7 @@ func (s *TranscoderService) GenerateDASHPlaylist(ctx context.Context, filename s
 		}
 		allBitrateVideo[i].Close()
 	}
-	
+
 	err = util.GenerateDASHPlaylistBento(filename)
 	if err != nil {
 		return err
@@ -137,13 +171,35 @@ func (s *TranscoderService) GenerateDASHPlaylist(ctx context.Context, filename s
 	// upload hls playlist ke minio
 	err = s.minioAPI.HlsPlaylistUploader(fmt.Sprintf("/%s/output", filename), fmt.Sprintf("./%s/output", filename))
 	if err != nil {
-		return err 
+		return err
+	}
+
+	// get thumbnail video
+	thumbnailURL, err := s.minioAPI.GetThumbnail(filename)
+	if err != nil {
+		return err
+	}
+
+	// get video format dash url
+	transcodedVideoURL, err := s.minioAPI.GetTranscodedVideoURL(filename)
+	if err != nil {
+		return err
+	}
+
+	// publish ke rabbit mq biar diconsume sama api
+	err = s.metadataMQ.PublishNewMetadata(ctx, domain.VideoMetadataMessage{
+		VideoURL:  transcodedVideoURL,
+		Thumbnail: thumbnailURL,
+	})
+	if err != nil {
+		zap.L().Error("s.metadataMQ.PublishNewMetadata (GenerateDASHPlaylist)", zap.Error(err))
+		return err
 	}
 
 	err = os.Remove(filename) //remove directory <filename>
 	if err != nil {
 		zap.L().Error("os.Remove(filename) (GenerateDASHPlaylist)", zap.Error(err))
-		return err 
+		return err
 	}
-	return nil 
+	return nil
 }

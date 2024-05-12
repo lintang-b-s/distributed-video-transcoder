@@ -11,6 +11,7 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/minio/minio-go/v7 v7.0.70
 	github.com/natefinch/lumberjack v2.0.0+incompatible
+	github.com/streadway/amqp v1.1.0
 	go.uber.org/zap v1.27.0
 )
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"lintang/video-processing-worker/biz/domain"
 	"lintang/video-processing-worker/config"
+	"net/url"
 	"os"
 	"time"
 
@@ -25,6 +26,61 @@ func NewMinioAPI(cfg *config.Config) *MinioAPI {
 		AccessKeyID:     cfg.Minio.AccessKeyID,
 		SecretAccessKey: cfg.Minio.SecretAccessKey,
 	}
+}
+
+// dapetin thumbnail video
+func (m *MinioAPI) GetTranscodedVideoURL(filename string) (string, error) {
+	ctx := context.Background()
+	endpoint := m.BaseURL
+	accessKeyID := m.AccessKeyID
+	secretAccessKey := m.SecretAccessKey
+	useSSL := false
+
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		zap.L().Error("new minio", zap.Error(err))
+		return "", domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+	}
+
+	bucketName := "oti-be-bucket"
+
+	presignedURL, err := minioClient.PresignedGetObject(ctx, bucketName, fmt.Sprintf("%s/output/stream.mpd", filename), 48*time.Hour, url.Values{})
+	if err != nil {
+		zap.L().Error("minioClient.PresignedGetObject (GetTranscodedVideoURL)", zap.Error(err))
+		return "", domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+	}
+	return presignedURL.String(), nil
+}
+
+
+// dapetin thumbnail video
+func (m *MinioAPI) GetThumbnail(filename string) (string, error) {
+	ctx := context.Background()
+	endpoint := m.BaseURL
+	accessKeyID := m.AccessKeyID
+	secretAccessKey := m.SecretAccessKey
+	useSSL := false
+
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		zap.L().Error("new minio", zap.Error(err))
+		return "", domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+	}
+
+	bucketName := "oti-be-bucket"
+
+	presignedURL, err := minioClient.PresignedGetObject(ctx, bucketName, fmt.Sprintf("%s/thumbnail.png", filename), 48*time.Hour, url.Values{})
+	if err != nil {
+		zap.L().Error("minioClient.PresignedGetObject (GetThumbnail)", zap.Error(err))
+		return "", domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+	}
+	return presignedURL.String(), nil
 }
 
 // pulling video dari minio
@@ -171,6 +227,36 @@ func (m *MinioAPI) GetAllBitrateVideoVersion(objectFolderName string) ([]*minio.
 	objects = append(objects, file240, file360, file480, file720, file1080)
 	return objects, nil
 
+}
+
+func (m *MinioAPI) UploadThumbnail(objectFolderName string, fileName string, filePath string) error {
+	ctx := context.Background()
+	endpoint := m.BaseURL
+	accessKeyID := m.AccessKeyID
+	secretAccessKey := m.SecretAccessKey
+	useSSL := false
+
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: useSSL,
+	})
+	if err != nil {
+		zap.L().Error("new minio", zap.Error(err))
+		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+	}
+
+	bucketName := "oti-be-bucket"
+
+	contentType := "application/octet-stream"
+
+	// <filename>/thumbnail.png di minio
+	info, err := minioClient.FPutObject(ctx, bucketName, objectFolderName+fileName, filePath, minio.PutObjectOptions{ContentType: contentType})
+	if err != nil {
+		zap.L().Error("minioClient.FPutObject UploadThumbnail)", zap.Error(err))
+		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+	}
+	zap.L().Info(fmt.Sprintf("Successfully uploaded %s of size %d\n", objectFolderName, info.Size))
+	return nil
 }
 
 func (m *MinioAPI) BitrateVersionVideoUploader(objectFolderName string, fileName string, filePath string) error {

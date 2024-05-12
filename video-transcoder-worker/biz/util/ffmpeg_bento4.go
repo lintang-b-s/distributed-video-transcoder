@@ -73,6 +73,23 @@ func CreateBitrate1080pVideo(filePath string, fileName string) error {
 	return nil
 }
 
+func CreateVideoThumbnaill(filePath string, fileName string) error {
+	thumbnailFfmpeg := exec.Command(
+		"ffmpeg",
+		"-i", filePath,
+		"-ss", "00:00:14.435",
+		"-frames:v", "1",
+		fmt.Sprintf("%s/thumbnail.png", fileName),
+	)
+
+	_, err := thumbnailFfmpeg.CombinedOutput()
+	if err != nil {
+		zap.L().Error(" thumbnailFfmpeg.CombinedOutput (CreateVideoThumbnaill) (util) ", zap.Error(err))
+		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+	}
+	return nil
+}
+
 func CreateBitrate720pVideo(filePath string, fileName string) error {
 	ffmpeg720 := exec.Command(
 		"ffmpeg",

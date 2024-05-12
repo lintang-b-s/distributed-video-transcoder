@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"lintang/video-processing-worker/biz/dal/rabbitmq"
 	"lintang/video-processing-worker/biz/router"
 	"lintang/video-processing-worker/config"
 	"os"
@@ -50,7 +51,8 @@ func main() {
 	callback = append(callback)
 	h.Engine.OnShutdown = append(h.Engine.OnShutdown, callback...) /// graceful shutdown
 
-	tSvc := di.InitTranscoderService(cfg)
+	rmq := rabbitmq.NewRabbitMQ(cfg )
+	tSvc := di.InitTranscoderService(cfg, rmq)
 	router.TranscoderRouter(h, tSvc)
 
 	// dari minio

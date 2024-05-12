@@ -8,6 +8,7 @@ package di
 
 import (
 	"github.com/google/wire"
+	"lintang/video-processing-worker/biz/dal/rabbitmq"
 	"lintang/video-processing-worker/biz/service"
 	"lintang/video-processing-worker/biz/webapi"
 	"lintang/video-processing-worker/config"
@@ -15,13 +16,14 @@ import (
 
 // Injectors from wire.go:
 
-func InitTranscoderService(cfg *config.Config) *service.TranscoderService {
+func InitTranscoderService(cfg *config.Config, rmq *rabbitmq.RabbitMQ) *service.TranscoderService {
 	dkronAPI := webapi.NewDkronAPI(cfg)
 	minioAPI := webapi.NewMinioAPI(cfg)
-	transcoderService := service.NewTranscoderService(dkronAPI, minioAPI)
+	metadataMQ := rabbitmq.NewMetadataMQ(rmq)
+	transcoderService := service.NewTranscoderService(dkronAPI, minioAPI, metadataMQ)
 	return transcoderService
 }
 
 // wire.go:
 
-var ProviderSet wire.ProviderSet = wire.NewSet(service.NewTranscoderService, webapi.NewMinioAPI, webapi.NewDkronAPI, wire.Bind(new(service.DkronCLIAPI), new(*webapi.DkronAPI)), wire.Bind(new(service.MinioAPI), new(*webapi.MinioAPI)))
+var ProviderSet wire.ProviderSet = wire.NewSet(service.NewTranscoderService, webapi.NewMinioAPI, webapi.NewDkronAPI, rabbitmq.NewMetadataMQ, wire.Bind(new(service.DkronCLIAPI), new(*webapi.DkronAPI)), wire.Bind(new(service.MinioAPI), new(*webapi.MinioAPI)), wire.Bind(new(service.MetadataMQ), new(*rabbitmq.MetadataMQ)))
