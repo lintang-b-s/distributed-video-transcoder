@@ -5,19 +5,19 @@ package main
 import (
 	"context"
 	"fmt"
-	"lintang/video-processing-worker/biz/router"
-	"lintang/video-processing-worker/config"
+	"lintang/video-transcoder-api/biz/dal/mongodb"
+	"lintang/video-transcoder-api/biz/dal/rabbitmq"
+	"lintang/video-transcoder-api/config"
 	"os"
 	"time"
 
-	"lintang/video-processing-worker/di"
+	hertzzap "github.com/hertz-contrib/logger/zap"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/app/server/binding"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/route"
-	hertzzap "github.com/hertz-contrib/logger/zap"
 	"github.com/hertz-contrib/pprof"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
@@ -35,6 +35,9 @@ func main() {
 
 	// init data access layer
 
+	mongo := mongodb.NewMongoDB(cfg)
+	rmq := rabbitmq.NewRabbitMQ(cfg)
+
 	// validation error custom
 	customValidationErr := CreateCustomValidationError()
 	h := server.Default(
@@ -44,33 +47,26 @@ func main() {
 	)
 	h.Use(AccessLog())
 
+	// repo
+	mRepo := mongodb.NewMetadataRepo(mongo)
+
+	// svc
+	rmqListener := rabbitmq.NewMetadataListener(rmq, mRepo, make(chan struct{}))
+
 	pprof.Register(h)
 	var callback []route.CtxCallback
 
-	callback = append(callback)
+	callback = append(callback, rmq.Close, mongo.Close, )
 	h.Engine.OnShutdown = append(h.Engine.OnShutdown, callback...) /// graceful shutdown
 
-	tSvc := di.InitTranscoderService(cfg)
-	router.TranscoderRouter(h, tSvc)
+	// rmq listenerr
+	go func() {
+		if err := rmqListener.ListenAndServe(); err != nil {
+			zap.L().Fatal("rmqListener.ListenAndServe()", zap.Error(err))
+		}
+	}()
 
-	// dari minio
-	// coba coba ffmpeg heheh
-	// videoFile, err := getUserVideoURL("joker_cloud")
-	// if err != nil {
-	// 	zap.L().Error("createHLSFromMinioObject", zap.Error(err))
-	// }
-	// err = createHLSFromMinioObject(videoFile, "joker_cloud") // buat hls dari video yang dari minio object
-	// if err != nil {
-	// 	zap.L().Error("createHLSFromMinioObject", zap.Error(err))
-	// }
-	// hlsPlaylistUploader(fmt.Sprintf("/%s/output", "joker_cloud"), fmt.Sprintf("./%s/output", "joker_cloud"))
-
-	// err = createHLSFromLocal("./video/joker.mp4", "./video") //buat hls dari video di locak
-	// fmt.Println(err)
-	// hlsPlaylistUploader("/video/output", "./video/output")
-	// start hertz http server
 	h.Spin()
-
 }
 
 var lg *zap.Logger
