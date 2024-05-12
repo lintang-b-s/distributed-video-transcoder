@@ -2,7 +2,7 @@ package mongodb
 
 import (
 	"context"
-	"lintang/video-transcoder-api/biz/dal/domain"
+	"lintang/video-transcoder-api/biz/domain"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.uber.org/zap"
@@ -21,7 +21,7 @@ func (r MetadataRepo) Insert(ctx context.Context, m domain.VideoMetadata) error 
 
 	_, err := coll.InsertOne(context.TODO(), coll)
 	if err != nil {
-		zap.L().Error("coll.InsertOne (MetadataRepo)", zap.Error(err ))
+		zap.L().Error("coll.InsertOne (MetadataRepo)", zap.Error(err))
 		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 	}
 	return nil
@@ -44,12 +44,12 @@ func (r MetadataRepo) GetAll(ctx context.Context) ([]domain.VideoMetadata, error
 	}
 
 	var metadatas []domain.VideoMetadata
-	for _ ,res := range results {
+	for _, res := range results {
 		metadatas = append(metadatas, domain.VideoMetadata{
-			ID: res["id"].(string),
-			VideoURL: res["video_url"].(string),
+			ID:        res["id"].(string),
+			VideoURL:  res["video_url"].(string),
 			Thumbnail: res["thumbnail"].(string),
 		})
 	}
-	return metadatas, nil 
+	return metadatas, nil
 }

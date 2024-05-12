@@ -5,20 +5,20 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
-	"lintang/video-transcoder-api/biz/dal/domain"
-	"lintang/video-transcoder-api/biz/dal/mongodb"
+	"lintang/video-transcoder-api/biz/domain"
+	"lintang/video-transcoder-api/biz/service"
 
 	"go.uber.org/zap"
 )
 
 type MetadatListenner struct {
-	rmq *RabbitMQ
-	metadataRepo *mongodb.MetadataRepo
-	done chan struct{}
+	rmq          *RabbitMQ
+	metadataRepo service.MetadataRepo
+	done         chan struct{}
 }
 
-func NewMetadataListener(rmq *RabbitMQ, m *mongodb.MetadataRepo, d chan struct{}) *MetadatListenner {
-	return &MetadatListenner{rmq, m, d }
+func NewMetadataListener(rmq *RabbitMQ, m service.MetadataRepo, d chan struct{}) *MetadatListenner {
+	return &MetadatListenner{rmq, m, d}
 }
 
 func (l MetadatListenner) ListenAndServe() error {
@@ -59,7 +59,7 @@ func (l MetadatListenner) ListenAndServe() error {
 		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 	}
 
-	var nack bool 
+	var nack bool
 	go func() {
 		for msg := range msgs {
 			zap.L().Info(fmt.Sprintf(`received message: %s`, msg.RoutingKey))
@@ -68,19 +68,19 @@ func (l MetadatListenner) ListenAndServe() error {
 			case "metadata.new":
 				metadata, err := decodeMetadataMessage(msg.Body)
 				if err != nil {
-					zap.L().Error("decodeMetadataMessage (ListenAndServe)", zap.Error(err ))
+					zap.L().Error("decodeMetadataMessage (ListenAndServe)", zap.Error(err))
 				}
 
 				err = l.metadataRepo.Insert(context.Background(), domain.VideoMetadata{VideoURL: metadata.VideoURL, Thumbnail: metadata.Thumbnail})
 				if err != nil {
 					nack = true
 				}
-			}	
+			}
 
 			if nack {
 				zap.L().Info("nack")
 				_ = msg.Nack(false, nack)
-			}else {
+			} else {
 				zap.L().Info("ack")
 				_ = msg.Ack(false)
 			}
@@ -88,16 +88,13 @@ func (l MetadatListenner) ListenAndServe() error {
 
 		l.done <- struct{}{}
 	}()
-	return nil 
+	return nil
 }
-
-
 
 type VideoMetadataMessage struct {
-	VideoURL string `json:"video_url"`
+	VideoURL  string `json:"video_url"`
 	Thumbnail string `json:"thumbnail"`
 }
-
 
 func decodeMetadataMessage(b []byte) (VideoMetadataMessage, error) {
 	var res VideoMetadataMessage
@@ -105,5 +102,5 @@ func decodeMetadataMessage(b []byte) (VideoMetadataMessage, error) {
 		zap.L().Error("NewDecoder (decodeMetadataMessage) (MetadataListener)", zap.Error(err))
 		return VideoMetadataMessage{}, domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 	}
-	return res, nil 
+	return res, nil
 }
