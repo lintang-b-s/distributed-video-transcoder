@@ -29,7 +29,7 @@ func TranscoderRouter(r *server.Hertz, ts TranscoderService) {
 		tH := root.Group("/transcoder")
 		{
 			tH.POST("/upload_playlist", handler.UploadPlaylistToMinio)
-			tH.POST("/transcode")
+			tH.POST("/transcode", handler.Transcode)
 		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"fmt"
 	"lintang/video-processing-worker/biz/domain"
 	"time"
 
@@ -35,12 +36,12 @@ func (m *MetadataMQ) publish(ctx context.Context, routingKey string, event inter
 	}
 
 	err := m.ch.Publish(
-		"monitor-billing", // exchange
+		"metadata", // exchange
 		routingKey,        // routing key
 		false,
 		false,
 		amqp.Publishing{
-			AppId:       "monitor-rest-server",
+			AppId:       "metadata-transcoding-worker",
 			ContentType: "application/x-encoding-gob",
 			Body:        b.Bytes(),
 			Timestamp:   time.Now(),
@@ -49,6 +50,6 @@ func (m *MetadataMQ) publish(ctx context.Context, routingKey string, event inter
 		zap.L().Error("m.ch.Publish: ", zap.Error(err))
 		return err
 	}
-
+	zap.L().Info(fmt.Sprintf("sukses mengirimkan message ke rabbit mq routing key %s", routingKey))
 	return nil
 }

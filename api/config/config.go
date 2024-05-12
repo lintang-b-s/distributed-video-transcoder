@@ -42,14 +42,14 @@ type (
 	}
 
 	Dkron struct {
-		DkronURL     string `json:"dkron_url" env:"DKRON_URL"`
-		MyServiceURL string `json:"ctr_svc_url" env:"CTR_URL"`
+		DkronURL            string `json:"dkron_url" env:"DKRON_URL"`
+		TranscoderWorkerURL string `json:"ctr_svc_url" env:"TRANSCODER_WORKER_URL"`
 	}
 
 	Minio struct {
 		BaseURL         string `json:"base_url_minio" env:"BASE_URL_MINIO"`
-		AccessKeyID     string `json:"access_key_minio" env:"ACC_KEY_MINIO"`
-		SecretAccessKey string `json:"secret_key_minio" env:"SECRET_KEY_MINIO"`
+		// AccessKeyID     string `json:"access_key_minio" env:"ACC_KEY_MINIO"`
+		// SecretAccessKey string `json:"secret_key_minio" env:"SECRET_KEY_MINIO"`
 	}
 	Mongo struct {
 		MongoURL string `json:"mongo_url" env:"MONGO_URL"`
@@ -72,7 +72,10 @@ func NewConfig() (*Config, error) {
 	// err = cleanenv.ReadConfig(path+"/local.env", cfg) // local run
 	if os.Getenv("APP_ENV") == "local" {
 		err = cleanenv.ReadConfig(path+"/local.env", cfg)
-	} else {
+	} else if os.Getenv("APP_ENV") == "k8s" {
+		err = cleanenv.ReadConfig(path+"/local.env", cfg)
+
+	}else {
 		err = cleanenv.ReadConfig(path+".env", cfg)
 	}
 	if err != nil {

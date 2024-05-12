@@ -9,6 +9,7 @@ import (
 	"lintang/video-processing-worker/biz/util"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -67,15 +68,15 @@ func (s *TranscoderService) Transcode(ctx context.Context, filename string, reso
 		// kalau video belum sepenuhnya ada di minio
 		for {
 			// fetch video dari minio terus menerus (setiap 300 milisecond) sampai object ada di minio
-			fileInfo, _ := s.minioAPI.GetUserVideoMP4URL(filename)
-			if stat, err = fileInfo.Stat(); err == nil {
+			videoFile, _ = s.minioAPI.GetUserVideoMP4URL(filename)
+			zap.L().Debug("pull video user ....", zap.String("filename", fmt.Sprintf("%s", filename)))
+			if stat, err = videoFile.Stat(); err == nil {
 				break
 			}
 			time.Sleep(300 * time.Millisecond)
 		}
-		zap.L().Debug("pull video mp4 user lagi...  GetUserVideoMP4URL (Transcode) (TranscoderService)", zap.String("filename", filename))
 	}
-
+	zap.L().Info(fmt.Sprintf("berhasil pull video %s.mp4", filename))
 	if _, err = io.CopyN(mylocalFile, videoFile, stat.Size); err != nil {
 		// copy bytes dari minio object ke local file yang baru dibuat
 		zap.L().Error("io.CopyN(mylocalFile, videoFile, stat.Size) (Transcode) (TranscoderService)", zap.String("filename", filename), zap.Error(err))
@@ -88,53 +89,73 @@ func (s *TranscoderService) Transcode(ctx context.Context, filename string, reso
 		err = util.CreateBitrate240pVideo(filePath, filename)
 		if err != nil {
 			zap.L().Error("util.CreateBitrate240pVideo (Transcode)", zap.Error(err))
+			return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 		}
 		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "240-f.mp4", fmt.Sprintf("./%s/240-f.mp4", filename))
+
 		break
 	case router.Res360p:
 		err = util.CreateBitrate360pVideo(filePath, filename)
 		if err != nil {
 			zap.L().Error("util.CreateBitrateRes360pVideo (Transcode)", zap.Error(err))
+			return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+
 		}
 		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "360-f.mp4", fmt.Sprintf("./%s/360-f.mp4", filename))
+
 	case router.Res480p:
 		err = util.CreateBitrate480pVideo(filePath, filename)
 		if err != nil {
 			zap.L().Error("util.CreateBitrate480ppVideo (Transcode)", zap.Error(err))
+			return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+
 		}
 		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "480-f.mp4", fmt.Sprintf("./%s/480-f.mp4", filename))
+
 	case router.Res720p:
 		err = util.CreateBitrate720pVideo(filePath, filename)
 		if err != nil {
 			zap.L().Error("util.CreateBitrate720pVideo (Transcode)", zap.Error(err))
+			return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 		}
 		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "720-f.mp4", fmt.Sprintf("./%s/720-f.mp4", filename))
 	case router.Res1080p:
 		err = util.CreateBitrate1080pVideo(filePath, filename)
 		if err != nil {
 			zap.L().Error("util.CreateBitrate1080pVideo (Transcode)", zap.Error(err))
+			return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 		}
 		err = s.minioAPI.BitrateVersionVideoUploader(fmt.Sprintf("/%s/", filename), "1080-f.mp4", fmt.Sprintf("./%s/1080-f.mp4", filename))
+		if err != nil {
+			zap.L().Error("util.BitrateVersionVideoUploader Res1080p (Transcode)", zap.Error(err))
+			return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+		}
+		// bikin thumbnailURl
+		err = util.CreateVideoThumbnaill(filePath, filename)
+		if err != nil {
+			return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+		}
+		// upload thumbnail ke minio
+		err = s.minioAPI.UploadThumbnail(fmt.Sprintf("/%s/", filename), "thumbnail.png", fmt.Sprintf("./%s/thumbnail.png", filename))
+		if err != nil {
+			return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
+		}
 
+		// buat cron job dkron buat bikin playlist dassh nya
+		err = s.dkronAPI.AddJobUploadPlaylistToMinio(ctx, filename)
+		if err != nil {
+			zap.L().Error(" s.dkronAPI.AddJobUploadPlaylistToMinio(ctx, filename) (Transcode)", zap.Error(err))
+		}
 	}
 	if err != nil {
 		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 	}
 
-	// bikin thumbnailURl
-	err = util.CreateVideoThumbnaill(filePath, filename)
-	if err != nil {
-		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
-	}
-	// upload thumbnail ke minio
-	err = s.minioAPI.UploadThumbnail(fmt.Sprintf("/%s/", filename), "thumbnail.png", fmt.Sprintf("./%s/thumbnail.png", filename))
-	if err != nil {
-		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
-	}
 	return nil
 }
 
 func (s *TranscoderService) GenerateDASHPlaylist(ctx context.Context, filename string) error {
+	zap.L().Info(fmt.Sprintf("membuat dash playlist untuk file %s ....", filename))
 	allBitrateVideo, err := s.minioAPI.GetAllBitrateVideoVersion(fmt.Sprintf("/%s", filename))
 	if err != nil {
 		return err
@@ -186,6 +207,11 @@ func (s *TranscoderService) GenerateDASHPlaylist(ctx context.Context, filename s
 		return err
 	}
 
+	// ubah URL jadi localhost
+	thumbnailURL = strings.Replace(thumbnailURL, "minio:9000", "localhost:9091", 1)
+
+	transcodedVideoURL = strings.Replace(transcodedVideoURL, "minio:9000", "localhost:9091", 1)
+
 	// publish ke rabbit mq biar diconsume sama api
 	err = s.metadataMQ.PublishNewMetadata(ctx, domain.VideoMetadataMessage{
 		VideoURL:  transcodedVideoURL,
@@ -196,10 +222,12 @@ func (s *TranscoderService) GenerateDASHPlaylist(ctx context.Context, filename s
 		return err
 	}
 
-	err = os.Remove(filename) //remove directory <filename>
+	err = os.RemoveAll(filename) //remove directory <filename>
 	if err != nil {
 		zap.L().Error("os.Remove(filename) (GenerateDASHPlaylist)", zap.Error(err))
 		return err
 	}
+
+	zap.L().Info(fmt.Sprintf("file %s selesai dibuatkan dash playlistnya dan dash playlist sudah diupload ke minio", filename))
 	return nil
 }

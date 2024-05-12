@@ -39,7 +39,7 @@ type ResponseError struct {
 }
 
 type createPresignedURLReq struct {
-	Filename string `json:"filename"`
+	Filename string `json:"filename,required"`
 }
 
 type createPresignedURLResp struct {

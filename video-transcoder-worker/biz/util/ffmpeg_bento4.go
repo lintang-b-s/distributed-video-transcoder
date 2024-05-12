@@ -30,9 +30,12 @@ func GenerateDASHPlaylistBento(fileName string) error {
 }
 
 func CreateBitrate1080pVideo(filePath string, fileName string) error {
+	zap.L().Info(fmt.Sprintf("membuat versi bitrate 1080p untuk file %s ...", fileName))
+
 	ffmpeg1080 := exec.Command(
 		"ffmpeg",
 		"-i", filePath,
+		"-s", "1920x1080",
 		"-c:v", "h264",
 		"-crf", "22",
 		"-tune", "film",
@@ -55,7 +58,7 @@ func CreateBitrate1080pVideo(filePath string, fileName string) error {
 
 	_, err := ffmpeg1080.CombinedOutput()
 	if err != nil {
-		zap.L().Error(" ffmpeg1080.CombinedOutput(CreateBitrate360pVideo) (util) ", zap.Error(err))
+		zap.L().Error(" ffmpeg1080.CombinedOutput(CreateBitrate1080pVideo) (util) ", zap.Error(err))
 		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 	}
 
@@ -69,6 +72,8 @@ func CreateBitrate1080pVideo(filePath string, fileName string) error {
 		zap.L().Error("  mp4fragment1080.CombinedOutput(CreateBitrate360pVideo) (util) ", zap.Error(err))
 		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 	}
+
+	zap.L().Info(fmt.Sprintf("membuat versi bitrate 1080p untuk file %s selesai", fileName))
 
 	return nil
 }
@@ -91,6 +96,8 @@ func CreateVideoThumbnaill(filePath string, fileName string) error {
 }
 
 func CreateBitrate720pVideo(filePath string, fileName string) error {
+	zap.L().Info(fmt.Sprintf("membuat versi bitrate 720p untuk file %s ...", fileName))
+
 	ffmpeg720 := exec.Command(
 		"ffmpeg",
 		"-i", filePath,
@@ -132,10 +139,14 @@ func CreateBitrate720pVideo(filePath string, fileName string) error {
 		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 	}
 
+	zap.L().Info(fmt.Sprintf("membuat versi bitrate 720p untuk file %s selesai", fileName))
+
 	return nil
 }
 
 func CreateBitrate480pVideo(filePath string, fileName string) error {
+	zap.L().Info(fmt.Sprintf("membuat versi bitrate 480p untuk file %s ...", fileName))
+
 	ffmpeg480 := exec.Command(
 		"ffmpeg",
 		"-i", filePath,
@@ -176,11 +187,14 @@ func CreateBitrate480pVideo(filePath string, fileName string) error {
 		zap.L().Error(" mp4fragment480.CombinedOutput (CreateBitrate360pVideo) (util) ", zap.Error(err))
 		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 	}
+	zap.L().Info(fmt.Sprintf("membuat versi bitrate 480p untuk file %s selesai", fileName))
 
 	return nil
 }
 
 func CreateBitrate360pVideo(filePath string, fileName string) error {
+	zap.L().Info(fmt.Sprintf("membuat versi bitrate 360pp untuk file %s ...", fileName))
+
 	ffmpeg360 := exec.Command(
 		"ffmpeg",
 		"-i", filePath,
@@ -220,6 +234,7 @@ func CreateBitrate360pVideo(filePath string, fileName string) error {
 		zap.L().Error(" mp4fragment360.CombinedOutput(CreateBitrate360pVideo) (util) ", zap.Error(err))
 		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 	}
+	zap.L().Info(fmt.Sprintf("membuat versi bitrate 360p untuk file %s selesai", fileName))
 
 	// upload semua versi video bitrate ke minio ini di service aja
 	// bitrateVersionVideoUploader(fmt.Sprintf("/%s/", fileName), "240-f.mp4", fmt.Sprintf("%s/240-f.mp4", fileName))
@@ -227,6 +242,7 @@ func CreateBitrate360pVideo(filePath string, fileName string) error {
 }
 
 func CreateBitrate240pVideo(filePath string, fileName string) error {
+	zap.L().Info(fmt.Sprintf("membuat versi bitrate 240p untuk file %s...", fileName))
 
 	ffmpeg240 := exec.Command(
 
@@ -268,6 +284,8 @@ func CreateBitrate240pVideo(filePath string, fileName string) error {
 		zap.L().Error(" mp4fragment240.CombinedOutput(CreateBitrate240pVideo) (util) ", zap.Error(err))
 		return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 	}
+
+	zap.L().Info(fmt.Sprintf("membuat versi bitrate 240p untuk file %s selesai", fileName))
 
 	// upload semua versi video bitrate ke minio ini di service aja
 	// bitrateVersionVideoUploader(fmt.Sprintf("/%s/", fileName), "240-f.mp4", fmt.Sprintf("%s/240-f.mp4", fileName))

@@ -1,0 +1,41 @@
+version: "3"
+services:
+   transcoder-worker:
+    container_name: transcoder-worker
+    build:
+      context: ./video-transcoder-worker
+      dockerfile: Dockerfile
+    mem_limit: 2800mb # kalau ukuran video > 40 mb & mem_limit < 2gb containernya bakal dapat signal kill wkwkkw
+    cpus: 5
+    ports: 
+     - 9995:9995
+    environment:
+      - ACC_KEY_MINIO=PVKVBT2H4JtTVwH260zR # ganti dg access key minio mu
+      - SECRET_KEY_MINIO=iccxX552432a6efnWo1swdPfTfPxxIQQM7R8WpKl # ganti dg secret key minio mu 
+    volumes:
+      - /etc/localtime:/etc/localtime:ro # biar time di container ini samaa dengan time di laptopku
+    networks:
+      - lintang-video-transcoder
+
+   api:
+    container_name: api
+    build: 
+      context: ./api
+      dockerfile: Dockerfile
+    mem_limit: 500mb
+    cpus: 0.7
+    environment:
+      - ACC_KEY_MINIO=PVKVBT2H4JtTVwH260zR # ganti dg access key minio mu
+      - SECRET_KEY_MINIO=iccxX552432a6efnWo1swdPfTfPxxIQQM7R8WpKl # ganti dg secret key minio mu 
+    ports:
+      - 9996:9996
+    volumes:
+      - /etc/localtime:/etc/localtime:ro # biar time di container ini samaa dengan time di laptopku
+    networks:
+      - lintang-video-transcoder
+
+networks:
+  lintang-video-transcoder:
+    external: true
+
+  

@@ -42,10 +42,10 @@ type JobReq struct {
 func (d *DkronAPI) AddJobUploadPlaylistToMinio(ctx context.Context, filename string) error {
 	randomString := uuid.New().String()
 
-	cronURL := "http://%s/api/v1/transcoder/upload_playlist?filename" + filename
+	cronURL := fmt.Sprintf("http://%s/api/v1/transcoder/upload_playlist?filename=%s", d.MyServiceURL, filename)
 	jobName := filename + randomString
 
-	at := time.Now().Add(time.Duration(500) * time.Millisecond)
+	at := time.Now().Add(time.Duration(2) * time.Second)
 	payload, err := json.Marshal(JobReq{
 		Name:        jobName,
 		DisplayName: jobName,

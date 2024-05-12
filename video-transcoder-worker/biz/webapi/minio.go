@@ -23,8 +23,8 @@ type MinioAPI struct {
 func NewMinioAPI(cfg *config.Config) *MinioAPI {
 	return &MinioAPI{
 		BaseURL:         cfg.Minio.BaseURL,
-		AccessKeyID:     cfg.Minio.AccessKeyID,
-		SecretAccessKey: cfg.Minio.SecretAccessKey,
+		AccessKeyID:     os.Getenv("ACC_KEY_MINIO"),
+		SecretAccessKey: os.Getenv("SECRET_KEY_MINIO"),
 	}
 }
 
@@ -54,7 +54,6 @@ func (m *MinioAPI) GetTranscodedVideoURL(filename string) (string, error) {
 	}
 	return presignedURL.String(), nil
 }
-
 
 // dapetin thumbnail video
 func (m *MinioAPI) GetThumbnail(filename string) (string, error) {
@@ -345,12 +344,11 @@ func (m *MinioAPI) HlsPlaylistUploader(objectFolderName string, folderSource str
 				}
 				for _, fileInsideDirNumber := range isiVideoDir {
 					fileInsideDirNumberName := fileInsideDirNumber.Name()
-					info, err := minioClient.FPutObject(ctx, bucketName, objectFolderName+"/"+isiOutput.Name()+"/"+avcDirName+"/"+dirNumber+"/"+fileInsideDirNumberName, folderSource+"/"+isiOutput.Name()+"/"+avcDirName+"/"+dirNumber+"/"+fileInsideDirNumberName, minio.PutObjectOptions{ContentType: contentType})
+					_, err := minioClient.FPutObject(ctx, bucketName, objectFolderName+"/"+isiOutput.Name()+"/"+avcDirName+"/"+dirNumber+"/"+fileInsideDirNumberName, folderSource+"/"+isiOutput.Name()+"/"+avcDirName+"/"+dirNumber+"/"+fileInsideDirNumberName, minio.PutObjectOptions{ContentType: contentType})
 					if err != nil {
 						zap.L().Error("minioClient.FPutObject (HlsPlaylistUploader)", zap.Error(err))
 						return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 					}
-					zap.L().Info(fmt.Sprintf("Successfully uploaded %s of size %d\n", info))
 				}
 			}
 		}
@@ -386,12 +384,11 @@ func (m *MinioAPI) HlsPlaylistUploader(objectFolderName string, folderSource str
 				}
 				for _, fileInsideDirNumber := range isiVideoDir {
 					fileInsideDirNumberName := fileInsideDirNumber.Name()
-					info, err := minioClient.FPutObject(ctx, bucketName, objectFolderName+"/"+isiOutput.Name()+"/"+endDirName+"/"+mpa4Dir[0].Name()+"/"+dirNumber+"/"+fileInsideDirNumberName, folderSource+"/"+isiOutput.Name()+"/"+endDirName+"/"+mpa4Dir[0].Name()+"/"+dirNumber+"/"+fileInsideDirNumberName, minio.PutObjectOptions{ContentType: contentType})
+					_, err := minioClient.FPutObject(ctx, bucketName, objectFolderName+"/"+isiOutput.Name()+"/"+endDirName+"/"+mpa4Dir[0].Name()+"/"+dirNumber+"/"+fileInsideDirNumberName, folderSource+"/"+isiOutput.Name()+"/"+endDirName+"/"+mpa4Dir[0].Name()+"/"+dirNumber+"/"+fileInsideDirNumberName, minio.PutObjectOptions{ContentType: contentType})
 					if err != nil {
 						zap.L().Error("minioClient.FPutObject isiVideoDir  (HlsPlaylistUploader)", zap.Error(err))
 						return domain.WrapErrorf(err, domain.ErrInternalServerError, domain.MessageInternalServerError)
 					}
-					zap.L().Info(fmt.Sprintf("Successfully uploaded %s of size %d\n", info))
 				}
 			}
 		}

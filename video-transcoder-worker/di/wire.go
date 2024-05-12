@@ -5,15 +5,13 @@
 package di
 
 import (
+	"lintang/video-processing-worker/biz/dal/rabbitmq"
 	"lintang/video-processing-worker/biz/service"
 	"lintang/video-processing-worker/biz/webapi"
 	"lintang/video-processing-worker/config"
-	"lintang/video-processing-worker/biz/dal/rabbitmq"
+
 	"github.com/google/wire"
 )
-
-
-
 
 var ProviderSet wire.ProviderSet = wire.NewSet(
 	service.NewTranscoderService,
@@ -30,7 +28,5 @@ func InitTranscoderService(cfg *config.Config, rmq *rabbitmq.RabbitMQ) *service.
 	wire.Build(
 		ProviderSet,
 	)
-	return nil 
+	return nil
 }
-
-

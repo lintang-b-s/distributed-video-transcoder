@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"lintang/video-transcoder-api/biz/domain"
+	"strings"
 )
 
 type DkronAPI interface {
@@ -39,6 +40,8 @@ func (s *TranscoderService) CreatePresignedURLForUpload(ctx context.Context, fil
 	if err != nil {
 		return "", err
 	}
+	presignedURL = strings.Replace(presignedURL, "minio:9000", "localhost:9091", 1)
+
 	return presignedURL, nil
 }
 

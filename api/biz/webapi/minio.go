@@ -3,8 +3,9 @@ package webapi
 import (
 	"context"
 	"fmt"
-	"lintang/video-transcoder-api/biz/dal/domain"
+	"lintang/video-transcoder-api/biz/domain"
 	"lintang/video-transcoder-api/config"
+	"os"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -19,10 +20,12 @@ type MinioAPI struct {
 }
 
 func NewMinioAPI(cfg *config.Config) *MinioAPI {
+	zap.L().Info("minio")
+	zap.L().Info(fmt.Sprintf("acc_key minio %s", os.Getenv("ACC_KEY_MINIO")))
 	return &MinioAPI{
 		BaseURL:         cfg.Minio.BaseURL,
-		AccessKeyID:     cfg.Minio.AccessKeyID,
-		SecretAccessKey: cfg.Minio.SecretAccessKey,
+		AccessKeyID:     os.Getenv("ACC_KEY_MINIO"),
+		SecretAccessKey: os.Getenv("SECRET_KEY_MINIO"),
 	}
 }
 
@@ -45,8 +48,8 @@ func (m *MinioAPI) CreatePresignedURLForUpload(ctx context.Context, filename str
 
 	presignedURL, err := minioClient.PresignedPutObject(ctx, bucketName, fmt.Sprintf("%s/%s.mp4", filename, filename), 48*time.Hour)
 	if err != nil {
-		zap.L().Error("minioClient.PresignedPutObject (CreatePresignedURLForUpload)", zap.Error(err ))
+		zap.L().Error("minioClient.PresignedPutObject (CreatePresignedURLForUpload)", zap.Error(err))
 		return "", err
 	}
-	return presignedURL.String(), nil 
+	return presignedURL.String(), nil
 }

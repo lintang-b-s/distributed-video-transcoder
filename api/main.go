@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"lintang/video-transcoder-api/biz/dal/mongodb"
 	"lintang/video-transcoder-api/biz/dal/rabbitmq"
+	"lintang/video-transcoder-api/biz/router"
 	"lintang/video-transcoder-api/config"
+	"lintang/video-transcoder-api/di"
 	"os"
 	"time"
 
@@ -53,12 +55,14 @@ func main() {
 	// svc
 	rmqListener := rabbitmq.NewMetadataListener(rmq, mRepo, make(chan struct{}))
 
+
 	pprof.Register(h)
 	var callback []route.CtxCallback
 
 	callback = append(callback, rmq.Close, mongo.Close, )
 	h.Engine.OnShutdown = append(h.Engine.OnShutdown, callback...) /// graceful shutdown
-
+	tSvc := di.InitTranscoderService(cfg, mongo)
+	router.TranscoderRouter(h, tSvc)
 	// rmq listenerr
 	go func() {
 		if err := rmqListener.ListenAndServe(); err != nil {
