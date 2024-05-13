@@ -1,0 +1,249 @@
+{
+	"info": {
+		"_postman_id": "b599d6d2-ed9d-481b-bace-af1d5f90f5da",
+		"name": "distributed_video_transcoder Kubernetes",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30538133",
+		"_collection_link": "https://orange-comet-51695.postman.co/workspace/netflik~35c0e208-27dd-4c2a-a67f-44e4ee221c8b/collection/30538133-b599d6d2-ed9d-481b-bace-af1d5f90f5da?action=share&source=collection_link&creator=30538133"
+	},
+	"item": [
+		{
+			"name": "get presigned url film joker 2",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"filename\": \"lintang-joker2\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.49.2:31203/api/v1/tenflix/upload",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"49",
+						"2"
+					],
+					"port": "31203",
+					"path": [
+						"api",
+						"v1",
+						"tenflix",
+						"upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "upload ke minio joker 2",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "file",
+					"file": {
+						"src": "/home/lintangbs/Downloads/joker(1).mp4"
+					}
+				},
+				"url": {
+					"raw": "http://192.168.49.2:31203/oti-be-bucket/lintang-joker11/lintang-joker11.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=PVKVBT2H4JtTVwH260zR%2F20240512%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240512T121435Z&X-Amz-Expires=172800&X-Amz-SignedHeaders=host&X-Amz-Signature=e5d808059c78bf2f0de589e1490ba73c03ce38612c88ab537520d262f3f572ff",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"49",
+						"2"
+					],
+					"port": "31203",
+					"path": [
+						"oti-be-bucket",
+						"lintang-joker11",
+						"lintang-joker11.mp4"
+					],
+					"query": [
+						{
+							"key": "X-Amz-Algorithm",
+							"value": "AWS4-HMAC-SHA256"
+						},
+						{
+							"key": "X-Amz-Credential",
+							"value": "PVKVBT2H4JtTVwH260zR%2F20240512%2Fus-east-1%2Fs3%2Faws4_request"
+						},
+						{
+							"key": "X-Amz-Date",
+							"value": "20240512T121435Z"
+						},
+						{
+							"key": "X-Amz-Expires",
+							"value": "172800"
+						},
+						{
+							"key": "X-Amz-SignedHeaders",
+							"value": "host"
+						},
+						{
+							"key": "X-Amz-Signature",
+							"value": "e5d808059c78bf2f0de589e1490ba73c03ce38612c88ab537520d262f3f572ff"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get presigned url film dune 2",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"filename\": \"lintang-dune2\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.49.2:31203/api/v1/tenflix/upload",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"49",
+						"2"
+					],
+					"port": "31203",
+					"path": [
+						"api",
+						"v1",
+						"tenflix",
+						"upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "upload ke minio dune 2",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "file",
+					"file": {
+						"src": "/home/lintangbs/Downloads/joker(1).mp4"
+					}
+				},
+				"url": {
+					"raw": "http://192.168.49.2:31203/oti-be-bucket/lintang-dune2/lintang-dune2.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=PVKVBT2H4JtTVwH260zR%2F20240512%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240512T124535Z&X-Amz-Expires=172800&X-Amz-SignedHeaders=host&X-Amz-Signature=3fa2ab8de951e0415f2950977334843c4c7d545f872597edacc3032f93b18c4d",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"49",
+						"2"
+					],
+					"port": "31203",
+					"path": [
+						"oti-be-bucket",
+						"lintang-dune2",
+						"lintang-dune2.mp4"
+					],
+					"query": [
+						{
+							"key": "X-Amz-Algorithm",
+							"value": "AWS4-HMAC-SHA256"
+						},
+						{
+							"key": "X-Amz-Credential",
+							"value": "PVKVBT2H4JtTVwH260zR%2F20240512%2Fus-east-1%2Fs3%2Faws4_request"
+						},
+						{
+							"key": "X-Amz-Date",
+							"value": "20240512T124535Z"
+						},
+						{
+							"key": "X-Amz-Expires",
+							"value": "172800"
+						},
+						{
+							"key": "X-Amz-SignedHeaders",
+							"value": "host"
+						},
+						{
+							"key": "X-Amz-Signature",
+							"value": "3fa2ab8de951e0415f2950977334843c4c7d545f872597edacc3032f93b18c4d"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get presigned url boruto",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"filename\": \"lintang-boruto2\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://192.168.49.2:31203/api/v1/tenflix/upload",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"49",
+						"2"
+					],
+					"port": "31203",
+					"path": [
+						"api",
+						"v1",
+						"tenflix",
+						"upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get metadatas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://192.168.49.2:31203/api/v1/tenflix",
+					"protocol": "http",
+					"host": [
+						"192",
+						"168",
+						"49",
+						"2"
+					],
+					"port": "31203",
+					"path": [
+						"api",
+						"v1",
+						"tenflix"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

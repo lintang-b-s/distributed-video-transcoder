@@ -111,7 +111,7 @@ SECRET_KEY_MINIO=<secret_key_mu>) ke environement container transcoder-worker & 
 (kalau transcoder worker dan api exited , docker compose  -f  docker-compose-app.yaml  up -d  lagi, karena rabbitmq belum startup)
 3. buat bucket dengan nama "oti-be-bucket" di minio (localhost:9001) & harus public  typenya
 
-4. import postman collection
+4. import postman collection (distributed_video_transcoder Kubernetes.postman_collection)
 5. get presigned url minio di endpoint postman
 6. upload video pake url method PUT yg ada di response endpoint diatas  (pake binary type di postman/yaak), usahakan ukuran video kurang dari 15mb,  semakin besar ukuran file semakin lama transcodingnya
 7. docker logs transcoder-worker -f, buat liat proses transcodingnya. 
