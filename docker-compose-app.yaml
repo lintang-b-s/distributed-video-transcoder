@@ -10,8 +10,8 @@ services:
     ports: 
      - 9995:9995
     environment:
-      - ACC_KEY_MINIO=PVKVBT2H4JtTVwH260zR # ganti dg access key minio mu
-      - SECRET_KEY_MINIO=iccxX552432a6efnWo1swdPfTfPxxIQQM7R8WpKl # ganti dg secret key minio mu 
+      - ACC_KEY_MINIO=HTqGMC0O5U521Z7ucWqe # ganti dg access key minio mu
+      - SECRET_KEY_MINIO=3pvSkSNGLun2kC8YY98lwiZ7ljdCEH75F5k6Z2i8 # ganti dg secret key minio mu 
     volumes:
       - /etc/localtime:/etc/localtime:ro # biar time di container ini samaa dengan time di laptopku
     networks:
@@ -25,8 +25,8 @@ services:
     mem_limit: 500mb
     cpus: 0.7
     environment:
-      - ACC_KEY_MINIO=PVKVBT2H4JtTVwH260zR # ganti dg access key minio mu
-      - SECRET_KEY_MINIO=iccxX552432a6efnWo1swdPfTfPxxIQQM7R8WpKl # ganti dg secret key minio mu 
+      - ACC_KEY_MINIO=HTqGMC0O5U521Z7ucWqe # ganti dg access key minio mu
+      - SECRET_KEY_MINIO=3pvSkSNGLun2kC8YY98lwiZ7ljdCEH75F5k6Z2i8 # ganti dg secret key minio mu 
     ports:
       - 9996:9996
     volumes:

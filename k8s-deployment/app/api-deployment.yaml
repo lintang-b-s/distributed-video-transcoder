@@ -20,7 +20,7 @@ spec:
           - name: MONGO_URL
             value: mongodb://admin:lintang@example-mongodb-0.example-mongodb-svc.mongodb.svc.cluster.local:27017,example-mongodb-1.example-mongodb-svc.mongodb.svc.cluster.local:27017,example-mongodb-2.example-mongodb-svc.mongodb.svc.cluster.local:27017/admin?replicaSet=example-mongodb&ssl=false
           - name: RABBIT_URL
-            value: amqp://default_user_Z4KRpZEzc-7wictHAsl:0vpV52fDOzbx2UtHFMRDotjw27pvzB1w@10.102.74.165:5672/   # ganti username sama passwordnya dg username password rabbit mq kamu , cara nampilinnya ada di step 2c-2f  #rabbitmq.default.svc.cluster.local gakbisa 
+            value: amqp://default_user_qBofhrkSzzUoEDWve1t:ZciKwWU3f4ev5dFjmBnIMNDnvr4MjKfr@10.108.25.30:5672/   # ganti username sama passwordnya dg username password rabbit mq kamu , cara nampilinnya ada di step 2c-2f  #rabbitmq.default.svc.cluster.local gakbisa 
           - name: BASE_URL_MINIO # default_user_Z4KRpZEzc-7wictHAsl 0vpV52fDOzbx2UtHFMRDotjw27pvzB1w%
             value: minio.minio-dev.svc.cluster.local:9000
           - name: DKRON_URL
@@ -28,9 +28,9 @@ spec:
           - name: TRANSCODER_WORKER_URL
             value: lintang-transcoder-worker-service.default.svc.cluster.local:9995
           - name: ACC_KEY_MINIO
-            value: DD0XYyNCMsXNxhIzqN7e  # ganti dg access key yang kamu buat di minio, caranya ada di step 3f-3g
+            value: oO3LIXBYLXmIXxG5t6FD  # ganti dg access key yang kamu buat di minio, caranya ada di step 3f-3g
           - name: SECRET_KEY_MINIO
-            value: tWWny4WjDtVrazJM6KTguxYcR5h8of0dyD4FZuyj  # ganti dg secret key yang kamu buat di minio, caranya ada di step 3f-3g
+            value: kuxo6ec5rgyIwMh8jVdNFk5nCyWutOnHC1gyutKp  # ganti dg secret key yang kamu buat di minio, caranya ada di step 3f-3g
           - name: APP_ENV
             value: k8s
           - name: Minikube_IP

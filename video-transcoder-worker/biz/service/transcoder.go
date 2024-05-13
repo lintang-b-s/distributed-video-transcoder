@@ -164,6 +164,7 @@ func (s *TranscoderService) GenerateDASHPlaylist(ctx context.Context, filename s
 	// pull segmented mp4 dari minio
 	files := []string{"240-f.mp4", "360-f.mp4", "480-f.mp4", "720-f.mp4", "1080-f.mp4"}
 
+	os.Mkdir(filename, 0777)
 	for i, _ := range files {
 		os.Mkdir(filename+"/minio", 0777)
 		mylocalFile, err := os.Create(filename + "/minio" + "/" + files[i])

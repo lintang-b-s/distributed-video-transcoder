@@ -10,7 +10,7 @@ video transcoding menggunakan ffmpeg & bento4 (buat convert ko protocol mpeg-das
 ```
 
 0. pastikan udah install, helm, minikube, docker
-0b. minikube start --cpus max --memory=9000mb (kalau sebelumnya pernah init cluster minikube, delete dulu `minikube delete`)
+0b. minikube start --cpus max --memory=9000mb --driver=docker (kalau sebelumnya pernah init cluster minikube, delete dulu `minikube delete`)
 0c. helm repo add mongodb https://mongodb.github.io/helm-charts
 0d. helm install community-operator mongodb/community-operator --namespace mongodb  --create-namespace
 
@@ -39,13 +39,14 @@ video transcoding menggunakan ffmpeg & bento4 (buat convert ko protocol mpeg-das
 --- rabbitmq----
 2. kubectl apply -f https://github.com/rabbitmq/cluster-operator/releases/latest/download/cluster-operator.yml 
 2b. tunggu sampai operator running  (kubectl get pod -n rabbitmq-system)
-2c. dapetin user rabbitmq : kubectl -n default  get secret rabbitmq-default-user -o jsonpath="{.data.username}" | base64 --decode
+2c. kubectl apply -f k8s-deployment/rabbitmq/rmq_cr.yaml
 
-2d. dapetin password rabbitmq:  kubectl -n default get secret rabbitmq-default-user -o jsonpath="{.data.password}" | base64 --decode
+2d. dapetin user rabbitmq : kubectl -n default  get secret rabbitmq-default-user -o jsonpath="{.data.username}" | base64 --decode
+
+2e. dapetin password rabbitmq:  kubectl -n default get secret rabbitmq-default-user -o jsonpath="{.data.password}" | base64 --decode
 
 2f. kubectl get service rabbitmq -o jsonpath='{.spec.clusterIP}'
 
-2g. kubectl apply -f k8s-deployment/rabbitmq/rmq_cr.yaml
 conURL := amqp://<yang_didapet_dari_2c>:<yang_didapet_dari2d>@<yang_didapet_dari_2g>:5672/
 contoh:
 connURL= amqp://default_user_Z4KRpZEzc-7wictHAsl:0vpV52fDOzbx2UtHFMRDotjw27pvzB1w@10.102.74.165:5672/
@@ -85,13 +86,15 @@ connURL= amqp://default_user_Z4KRpZEzc-7wictHAsl:0vpV52fDOzbx2UtHFMRDotjw27pvzB1
 
 ---reverse proxy minio---- (biar presignedurl minio bisa diakses di laptop)
 6a. kubectl create configmap reverse-proxy-minio-config --from-file ./k8s-deployment/app/nginx.conf
+
+7. minikube addons enable metrics-server
 ```
 
 -- deploy app nya
 ```
 0. paste minikube ip ke environent Minikube_IP k8s-deployment/app/api-deployment.yaml & k8s-deployment/app/transcoder-worker.yaml 
 1. kubectl apply -f k8s-deployment/app
-2. dapetin url transcoder-api: minikube service lintang-transcoder-api --url
+2. dapetin url transcoder-api: minikube service lintang-transcoder-api-service  --url
 3. import postman collection  (distributed_video_transcoder Kubernetes.postman_collection)
 4. request ke endpoint getPresignedURl minio
 5. upload video ke endpoint yang ada di response endpoint getPresignedURl (method PUT && body typenya binary di postman/yaak)
@@ -118,7 +121,7 @@ SECRET_KEY_MINIO=<secret_key_mu>) ke environement container transcoder-worker & 
 5. get presigned url minio di endpoint postman
 6. upload video pake url method PUT yg ada di response endpoint diatas  (pake binary type di postman/yaak), usahakan ukuran video kurang dari 15mb,  semakin besar ukuran file semakin lama transcodingnya
 7. docker logs transcoder-worker -f, buat liat proses transcodingnya. 
-8. setelah selesai transcoding, get video URL nya lewat URL http://192.168.49.2:31203/api/v1/tenflixdi postman
+8. setelah selesai transcoding, get video URL nya lewat URL http://localhost:9996/api/v1/tenflix di postman
 9. cd videoplayer/my-app && npm i && npm run dev, buka localhost:3000, masukin video url yg di response getMetaadata tadi, video player bakal mulai video nya dg protokol mpeg-dash
 
 ```
@@ -146,7 +149,7 @@ ffmpeg -i <input_file_name>.mp4 -c:v h264 -crf 33 -tune film -profile:v main -le
 ffmpeg -i <input_file_name>.mp4 -c:v h264 -crf 36 -tune film -profile:v main -level:v 4.0 -maxrate 625k -bufsize 1250k -r 25 -keyint_min 25 -g 50 -sc_threshold 0 -c:a aac -ar 22050 -b:a 64k -ac 1 -pix_fmt yuv420p -movflags +faststart 240.mp4  && mp4fragment 240.mp4 240-f.mp4
 
 
-nah command diatas menghasilkan video 1080p-f.mp4, 720p-f.mp4, 480p-f.mp4, 360p-f.mp4, 240p-f.mp4 yang maana akan dikirim ke minio buecket ke folder <input_file_name>, setelah itu worker akan create cron job ke dkron (buat dikirim ke transcoding worker & worker jalannin task bento4 generate dash playlist dari 5 file yang dipull dari minio)
+nah command diatas menghasilkan video 1080p-f.mp4, 720p-f.mp4, 480p-f.mp4, 360p-f.mp4, 240p-f.mp4 yang maana akan dikirim ke minio bucket ke folder <input_file_name>, setelah itu worker akan create cron job ke dkron (buat dikirim ke transcoding worker & worker jalannin task bento4 generate dash playlist dari 5 file yang dipull dari minio)
 
 ```
 
