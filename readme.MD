@@ -92,12 +92,15 @@ connURL= amqp://default_user_Z4KRpZEzc-7wictHAsl:0vpV52fDOzbx2UtHFMRDotjw27pvzB1
 0. paste minikube ip ke environent Minikube_IP k8s-deployment/app/api-deployment.yaml & k8s-deployment/app/transcoder-worker.yaml 
 1. kubectl apply -f k8s-deployment/app
 2. dapetin url transcoder-api: minikube service lintang-transcoder-api --url
-3. import postman collection 
+3. import postman collection  (distributed_video_transcoder Kubernetes.postman_collection)
 4. request ke endpoint getPresignedURl minio
 5. upload video ke endpoint yang ada di response endpoint getPresignedURl (method PUT && body typenya binary di postman/yaak)
 6. kubectl get pod  . terus `kubectl logs <nama_pod_transcder_worker>` buat liat log process transcodingnya
 7. setelah selesai upload semua resolusi (240p-1080p),  request ke endpoint get metadatas, buat dapetin video_url minio 
+8. cd videoplayer/my-app && npm i && npm run dev, buka localhost:3000, masukin video url yg di response getMetaadata tadi, video player bakal mulai video nya dg protokol mpeg-dash
 ```
+
+
 
 ## Quick Start (Docker Compose, Transcoding worker cuma 1)
 ```
@@ -111,11 +114,11 @@ SECRET_KEY_MINIO=<secret_key_mu>) ke environement container transcoder-worker & 
 (kalau transcoder worker dan api exited , docker compose  -f  docker-compose-app.yaml  up -d  lagi, karena rabbitmq belum startup)
 3. buat bucket dengan nama "oti-be-bucket" di minio (localhost:9001) & harus public  typenya
 
-4. import postman collection (distributed_video_transcoder Kubernetes.postman_collection)
+4. import postman collection
 5. get presigned url minio di endpoint postman
 6. upload video pake url method PUT yg ada di response endpoint diatas  (pake binary type di postman/yaak), usahakan ukuran video kurang dari 15mb,  semakin besar ukuran file semakin lama transcodingnya
 7. docker logs transcoder-worker -f, buat liat proses transcodingnya. 
-8. setelah selesai transcoding, get video URL nya lewat URL http://localhost:9996/api/v1/tenflix di postman
+8. setelah selesai transcoding, get video URL nya lewat URL http://192.168.49.2:31203/api/v1/tenflixdi postman
 9. cd videoplayer/my-app && npm i && npm run dev, buka localhost:3000, masukin video url yg di response getMetaadata tadi, video player bakal mulai video nya dg protokol mpeg-dash
 
 ```
