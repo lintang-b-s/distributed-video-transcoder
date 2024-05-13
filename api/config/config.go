@@ -73,8 +73,7 @@ func NewConfig() (*Config, error) {
 	if os.Getenv("APP_ENV") == "local" {
 		err = cleanenv.ReadConfig(path+"/local.env", cfg)
 	} else if os.Getenv("APP_ENV") == "k8s" {
-		err = cleanenv.ReadConfig(path+"/local.env", cfg)
-
+		err = cleanenv.ReadConfig(path+"k8s.env", cfg)
 	}else {
 		err = cleanenv.ReadConfig(path+".env", cfg)
 	}

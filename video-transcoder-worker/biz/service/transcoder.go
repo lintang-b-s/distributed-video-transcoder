@@ -208,9 +208,15 @@ func (s *TranscoderService) GenerateDASHPlaylist(ctx context.Context, filename s
 	}
 
 	// ubah URL jadi localhost
-	thumbnailURL = strings.Replace(thumbnailURL, "minio:9000", "localhost:9091", 1)
 
-	transcodedVideoURL = strings.Replace(transcodedVideoURL, "minio:9000", "localhost:9091", 1)
+	if os.Getenv("APP_ENV") == "k8s" {
+		thumbnailURL = strings.Replace(thumbnailURL, "minio.minio-dev.svc.cluster.local:9000", fmt.Sprintf("%s:30009", os.Getenv("Minikube_IP")), 1)
+		transcodedVideoURL = strings.Replace(transcodedVideoURL, "minio.minio-dev.svc.cluster.local:9000", fmt.Sprintf("%s:30009", os.Getenv("Minikube_IP")), 1)
+	} else {
+		thumbnailURL = strings.Replace(thumbnailURL, "minio:9000", "localhost:9091", 1)
+
+		transcodedVideoURL = strings.Replace(transcodedVideoURL, "minio:9000", "localhost:9091", 1)
+	}
 
 	// publish ke rabbit mq biar diconsume sama api
 	err = s.metadataMQ.PublishNewMetadata(ctx, domain.VideoMetadataMessage{

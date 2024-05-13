@@ -55,7 +55,7 @@ services:
     volumes:
       - ./dkron_curl.sh:/curl/curl.sh
       - /etc/localtime:/etc/localtime:ro # biar time di container ini samaa dengan time di laptopku
-    command: agent --server --bootstrap-expect=1 z--node-name=node1
+    command: agent --server --bootstrap-expect=1 --node-name=node1
     networks:
       - lintang-video-transcoder
 

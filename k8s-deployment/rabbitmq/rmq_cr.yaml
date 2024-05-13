@@ -1,0 +1,14 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq
+spec:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 400m
+      memory: 500m
+    limits:
+      cpu: 800m
+      memory: 1Gi
+      

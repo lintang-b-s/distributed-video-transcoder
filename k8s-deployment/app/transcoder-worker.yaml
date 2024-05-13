@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lintang-transcoder-worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: lintang-transcoder-worker
+  template:
+    metadata:
+      labels:
+        app:  lintang-transcoder-worker
+    spec:
+      containers:
+      - name:  lintang-transcoder-worker
+        image: docker.io/lintangbirdas/transcoder-worker:v2
+        imagePullPolicy: Always
+        env:
+          - name: RABBIT_URL
+            value: amqp://default_user_Z4KRpZEzc-7wictHAsl:0vpV52fDOzbx2UtHFMRDotjw27pvzB1w@10.102.74.165:5672/  # ganti username sama passwordnya dg username password rabbit mq kamu , cara nampilinnya ada di step 2c-2f
+          - name: BASE_URL_MINIO
+            value: minio.minio-dev.svc.cluster.local:9000
+          - name: DKRON_URL
+            value: http://dkron-svc:8080/v1/jobs
+          - name: TRANSCODER_WORKER_URL
+            value: lintang-transcoder-worker-service.default.svc.cluster.local:9995
+          - name: ACC_KEY_MINIO
+            value: DD0XYyNCMsXNxhIzqN7e  # ganti dg access key yang kamu buat di minio, caranya ada di step 3f-3g
+          - name: SECRET_KEY_MINIO
+            value: tWWny4WjDtVrazJM6KTguxYcR5h8of0dyD4FZuyj  # ganti dg secret key yang kamu buat di minio, caranya ada di step 3f-3g
+          - name: APP_ENV
+            value: k8s
+          - name: Minikube_IP
+            value: 192.168.49.2 # isi dg minikube ipmu, `minikube ip`
+        resources:
+          limits:
+            memory: "2000Mi"
+            cpu: "1950m"
+        ports:
+        - containerPort: 9995
+   
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lintang-transcoder-worker-service
+spec:
+  selector: 
+    app: lintang-transcoder-worker
+  ports:
+    - port: 9995
+      targetPort: 9995
+
+
+
+  

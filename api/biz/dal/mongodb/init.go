@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"fmt"
 	"lintang/video-transcoder-api/config"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,6 +19,7 @@ func NewMongoDB(cfg *config.Config) *MongoDB {
 	if err != nil {
 		zap.L().Fatal("mongo.Connect", zap.Error(err))
 	}
+	zap.L().Info(fmt.Sprintf("connected to mongodb ! %s", cfg.Mongo.MongoURL))
 	return &MongoDB{Cli: client}
 }
 

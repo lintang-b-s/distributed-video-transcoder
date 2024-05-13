@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dkron
+spec:
+  selector:
+    matchLabels:
+      app: dkron
+  template:
+    metadata:
+      labels:
+        app:  dkron
+    spec:
+      hostNetwork: true # harus ada biar bisa install curl
+      dnsPolicy: "ClusterFirstWithHostNet" #"Default" Default gak bisa request ke transcoder-worker-servicce..## biar bisa install curl
+      containers:
+      - name:  dkron
+        image: docker.io/dkron/dkron:3.2.7
+        volumeMounts:
+        - mountPath: /curl
+          name: dkroncurl
+        - name: dirbuatcurl
+          mountPath: /bisa
+        command: ["/usr/local/bin/dkron", "agent", "--server", "--bootstrap-expect=1"] #, "--data-dir=/dkron.data
+        ports:
+          - containerPort: 8080
+      volumes:
+        - name: dirbuatcurl
+          emptyDir: {}
+        - name: dkroncurl
+          configMap:
+            name: dkroncurl
+   
+
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: dkron-svc
+spec: 
+  selector:
+    app: dkron
+  ports: 
+  - port: 8080
+    targetPort: 8080
+    nodePort: 31022
+  type: NodePort

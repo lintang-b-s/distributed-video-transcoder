@@ -24,6 +24,7 @@ RUN apt-get install unzip -y
 RUN unzip Bento4-SDK-1-6-0-641.x86_64-unknown-linux.zip
 ENV PATH="${PATH}:/Bento4-SDK-1-6-0-641.x86_64-unknown-linux/bin"
 COPY --from=builder /app/config /config
+COPY --from=builder /app/k8s.env .
 COPY --from=builder /app/.env .
 COPY --from=builder /bin/app /bin/app
 CMD ["/bin/app"]
@@ -38,7 +39,7 @@ CMD ["/bin/app"]
 # RUN   apt-get install cmake -y
 # RUN cd Bento4 && mkdir cmakebuild &&  cd cmakebuild  && cmake -DCMAKE_BUILD_TYPE=Release .. && make
 
-# alpine gak bisa mp4dash , padahal golangku pake mp4dash 
+# alpine gak bisa mp4dash , 
 # FROM alpine:3.19.1
 # # install ffmpeg & bento4 buat video transcoding
 # RUN apk update
@@ -48,13 +49,12 @@ CMD ["/bin/app"]
 
 # RUN  apk add --no-cache make
 # RUN apk add cmake
-# RUN apk add git
-# RUN git clone  https://github.com/axiomatic-systems/Bento4.git
-# # RUN wget https://github.com/axiomatic-systems/Bento4/archive/refs/heads/master.zip # gakbisa ini
+# RUN apk add wget 
+# RUN wget https://www.bok.net/Bento4/binaries/Bento4-SDK-1-6-0-641.x86_64-unknown-linux.zip
+# RUN apt-get install unzip -y
+# RUN unzip Bento4-SDK-1-6-0-641.x86_64-unknown-linux.zip
+# ENV PATH="${PATH}:/Bento4-SDK-1-6-0-641.x86_64-unknown-linux/bin"
 
-
-# RUN apk add build-base
-# RUN cd Bento4 && mkdir cmakebuild &&  cd cmakebuild  && cmake -DCMAKE_BUILD_TYPE=Release .. && make
 # # RUN apk add bento4
 # COPY --from=builder /app/config /config
 # COPY --from=builder /app/.env .

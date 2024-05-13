@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"lintang/video-transcoder-api/biz/domain"
+	"os"
 	"strings"
 )
 
@@ -40,7 +42,12 @@ func (s *TranscoderService) CreatePresignedURLForUpload(ctx context.Context, fil
 	if err != nil {
 		return "", err
 	}
-	presignedURL = strings.Replace(presignedURL, "minio:9000", "localhost:9091", 1)
+ // http://minio.minio-dev.svc.cluster.local:9000
+	if os.Getenv("APP_ENV") == "k8s" {
+		presignedURL = strings.Replace(presignedURL, "minio.minio-dev.svc.cluster.local:9000", fmt.Sprintf("%s:30009", os.Getenv("Minikube_IP")), 1)
+	} else {
+		presignedURL = strings.Replace(presignedURL, "minio:9000", "localhost:9091", 1)
+	}
 
 	return presignedURL, nil
 }
